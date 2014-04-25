@@ -100,9 +100,10 @@ int shmmanip(uint token, char *addr, uint size) {
 
   a = PGROUNDUP(a);
   if (size == 0) {
+    struct proc *owner = (void*) 0;
 
-    if (proc->shmem_tok != token) {
-      cprintf("Differetn token than %d", proc->shmem_tok);
+    if ((owner = shmemowner(token)) == 0) {
+      cprintf ("Token not found!");
       return -1;
     }
 
@@ -110,7 +111,7 @@ int shmmanip(uint token, char *addr, uint size) {
     // and get the page where va == proc->startaddr
     // and then copy the next n pages on to this addr.
 
-    pde_t *ppgdir = proc->parent->pgdir;
+    pde_t *ppgdir = owner->pgdir;
     pte_t *pte;
     uint pa;
     uint i = (uint) proc->parent->startaddr;

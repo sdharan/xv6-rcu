@@ -145,9 +145,9 @@ fork(void)
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *proc->tf;
-  np->shmem_size = proc->shmem_size;
-  np->shmem_tok = proc->shmem_tok;
-  np->startaddr = proc->startaddr;
+  /* np->shmem_size = proc->shmem_size; */
+  /* np->shmem_tok = proc->shmem_tok; */
+  /* np->startaddr = proc->startaddr; */
   
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -161,6 +161,25 @@ fork(void)
   np->state = RUNNABLE;
   safestrcpy(np->name, proc->name, sizeof(proc->name));
   return pid;
+}
+
+struct proc*
+shmemowner(uint token) {
+  struct proc *owner = (void*) 0, *p;
+  
+  acquire(&ptable.lock);
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    
+    if(p->state == UNUSED)
+      continue;
+    
+    if (p->shmem_tok == token) {
+      owner = p;
+      break;
+    }
+  }
+  release(&ptable.lock);
+  return owner;
 }
 
 // Exit the current process.  Does not return.
