@@ -69,7 +69,7 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
-
+  p->shmem_size = 0;
   return p;
 }
 
@@ -145,7 +145,10 @@ fork(void)
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *proc->tf;
-
+  np->shmem_size = proc->shmem_size;
+  np->shmem_tok = proc->shmem_tok;
+  np->startaddr = proc->startaddr;
+  
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 

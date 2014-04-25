@@ -89,6 +89,64 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
   return 0;
 }
 
+int shmmanip(uint token, char *addr, uint size) {
+
+  uint a = (uint) addr;
+  char *mem;
+
+  // Asserts 
+  if((uint)addr+size  >= KERNBASE)
+    return -1;
+
+  a = PGROUNDUP(a);
+  if (size == 0) {
+
+    if (proc->shmem_tok != token) {
+      cprintf("Differetn token than %d", proc->shmem_tok);
+      return -1;
+    }
+
+    // Loop through parent directory structure through proc->parent->pgdir
+    // and get the page where va == proc->startaddr
+    // and then copy the next n pages on to this addr.
+
+    pde_t *ppgdir = proc->parent->pgdir;
+    pte_t *pte;
+    uint pa;
+    uint i = (uint) proc->parent->startaddr;
+    uint end = ((uint) proc->parent->startaddr + proc->parent->shmem_size);
+    for(; i < end; i += PGSIZE, a+=PGSIZE){
+      if((pte = walkpgdir(ppgdir, (void *) i, 0)) == 0)
+        panic("shmget: pte should exist");
+      if(!(*pte & PTE_P))
+        panic("shmget: page not present");
+      pa = PTE_ADDR(*pte);
+      mappages(proc->pgdir, (char*) a, PGSIZE, pa, PTE_W|PTE_U);
+    }
+    return 0;
+  }
+
+  proc->startaddr = (void*) 0;
+  for (; a < (uint)addr + size; a += PGSIZE) {
+    mem = kalloc();
+    if (mem == 0) {
+      cprintf("shmget out of memory\n");
+      return -1;
+    }
+    memset(mem, 0, PGSIZE);
+    mappages(proc->pgdir, (char*) a, PGSIZE, v2p(mem), PTE_W|PTE_U);
+    if (proc->startaddr == 0) {
+      proc->startaddr = (char*)a;
+    }
+  }
+
+  proc->shmem_tok = token;
+  proc->shmem_size = size;
+  return 0;
+}
+
+
+
 // There is one page table per process, plus one that's used when
 // a CPU is not running any process (kpgdir). The kernel uses the
 // current process's page table during system calls and interrupts;
@@ -323,9 +381,18 @@ copyuvm(pde_t *pgdir, uint sz)
       panic("copyuvm: page not present");
     pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
+    /* if (proc->shmem_size != 0) { */
+    /*   if ((uint)p2v(pa) >= (uint)proc->startaddr && (uint)p2v(pa) < (uint)(proc->startaddr + proc->shmem_size)) { */
+    /*     // use the same pa as the old process. */
+    /*     mem = p2v(pa); */
+    /*     done = 1; */
+    /*   } */
+    /* } */
+    /* if (done == 0)  { */
     if((mem = kalloc()) == 0)
       goto bad;
     memmove(mem, (char*)p2v(pa), PGSIZE);
+    //}
     if(mappages(d, (void*)i, PGSIZE, v2p(mem), flags) < 0)
       goto bad;
   }
@@ -376,3 +443,14 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
   }
   return 0;
 }
+
+    /* // map addr to addr + size to proc->startaddr */
+    /* int count = 0; */
+    /* for (; a < (uint)addr + proc->shmem_size; a += PGSIZE) { */
+    /*   mem = (char*) ((uint)proc->startaddr + PGSIZE * count++); */
+    /*   if (mem == 0) { */
+    /*     cprintf("something wrong!"); */
+    /*     return -1; */
+    /*   } */
+    /*   cprintf ("\nget Mem is %p\n", mem); */
+    /*   mappages(proc->pgdir, (char*) a, PGSIZE, v2p(mem), PTE_W|PTE_U); */

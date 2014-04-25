@@ -56,6 +56,21 @@ sys_sbrk(void)
 }
 
 int
+sys_shmget(void) {
+
+  //uint token, char *addr, uint siz
+
+  int token, size;
+  char *addr;
+  int i;
+  argint(0, &token);
+  argint(1, &i);
+  addr = (char*)i;
+  argint(2, &size);
+  cprintf ("\nsize of char* : %d\ntoken : %d \n addr %d \n size:\%d",sizeof(char*), token, (uint) addr, size);
+  return shmmanip(token, addr, size);
+}
+int
 sys_sleep(void)
 {
   int n;

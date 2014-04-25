@@ -22,6 +22,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int shmget(uint token, char *addr, uint size);
 
 // ulib.c
 int stat(char*, struct stat*);
