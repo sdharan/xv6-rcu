@@ -102,3 +102,22 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+int
+sys_rcuwait(void)
+{
+    call_rcu();
+    return 1;
+}
+int
+sys_rcureadlock(void)
+{
+  rcu_read_lock();
+  return 1;
+}
+int
+sys_rcureadunlock(void)
+{
+  rcu_read_unlock();
+  return 1;
+}
+

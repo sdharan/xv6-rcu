@@ -14,7 +14,23 @@ struct cpu {
   // Cpu-local storage variables; see below
   struct cpu *cpu;
   struct proc *proc;           // The currently-running process.
+  // RCU prempt disable flag.
+
+  uint preempt_disable_count;
 };
+
+#define inc_preempt_count
+#define dec_preempt_count cpu->preempt_disable_count--;
+
+#define preempt_disable() \
+do { \
+   cpu->preempt_disable_count++;  \
+} while (0)
+
+#define preempt_enable() \
+do { \
+    cpu->preempt_disable_count--; \
+} while (0)
 
 extern struct cpu cpus[NCPU];
 extern int ncpu;
@@ -69,6 +85,7 @@ struct proc {
   uint shmem_tok;              // Token for this process' shared memory region
   char * startaddr;            // Virtual address of the start region of their shmem
   uint shmem_size;             // Size of the shared memory region
+  char allowed_cpu;           // Enable process affinity
 };
 
 // Process memory is laid out contiguously, low addresses first:

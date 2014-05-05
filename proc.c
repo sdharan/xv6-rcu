@@ -47,6 +47,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->allowed_cpu = -1;
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -276,6 +277,7 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
+
 void
 scheduler(void)
 {
@@ -294,6 +296,14 @@ scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
+      if (p->allowed_cpu > -1 && p->allowed_cpu == cpu->id) {
+        //cprintf("\n Processing prod %d, at cpu %d", p->pid, cpu->id);
+      } else if (p->allowed_cpu > -1) {
+        //cprintf("\nSkipping proc %d at cpu %d, proc->allowed_cpu %d", p->pid, cpu->id, p->allowed_cpu);
+          continue;
+      }
+
+rerun:
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
@@ -302,7 +312,12 @@ scheduler(void)
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
+      if (cpu->preempt_disable_count > 0) {
+          // Go back and reschedule the same process
+          goto rerun;
+      }
       proc = 0;
+
     }
     release(&ptable.lock);
 

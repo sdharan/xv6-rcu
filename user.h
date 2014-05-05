@@ -23,6 +23,9 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int shmget(uint token, char *addr, uint size);
+int rcuwait(void);
+int rcureadlock(void);
+int rcureadunlock(void);
 
 // ulib.c
 int stat(char*, struct stat*);

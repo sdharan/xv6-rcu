@@ -56,10 +56,8 @@ argptr(int n, char **pp, int size)
 {
   int i;
   
-  if(argint(n, &i) < 0) {
-    cprintf ("Testing");
+  if(argint(n, &i) < 0)
     return -1;
-  }
   if((uint)i >= proc->sz || (uint)i+size > proc->sz)
     return -1;
   *pp = (char*)i;
@@ -101,6 +99,9 @@ extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_shmget(void);
+extern int sys_rcuwait(void);
+extern int sys_rcureadunlock(void);
+extern int sys_rcureadlock(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -125,6 +126,9 @@ static int (*syscalls[])(void) = {
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
 [SYS_shmget]  sys_shmget,
+[SYS_rcuwait] sys_rcuwait,
+[SYS_rcureadlock] sys_rcureadlock,
+[SYS_rcureadunlock] sys_rcureadunlock,
 };
 
 void

@@ -176,7 +176,12 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
-int             shmmanip(uint token, char *addr, uint size);
+
+// rcu.h
+void rcu_read_lock(void);
+void rcu_read_unlock(void);
+void call_rcu (void);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+int             shmmanip(uint token, char *addr, uint size);
