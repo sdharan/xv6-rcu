@@ -26,6 +26,7 @@ void call_rcu()
         proc->allowed_cpu =  i++;
         yield();
     }
+    proc->allowed_cpu = -1;
     // You are good to go.
     cprintf ("\n RCU wait done!");
 }

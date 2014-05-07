@@ -56,6 +56,8 @@ main(int argc, char *argv[])
       *temp = 'B';
       temp++;
     }
+    sleep(10);
+    printf(1,"\nProcess gets scheduled again!\n");
   }
   wait ();
   exit();
